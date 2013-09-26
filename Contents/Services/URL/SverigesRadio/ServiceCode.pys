@@ -12,7 +12,10 @@ def MetadataObjectForURL(url):
 	else:
 	    pass
     
-    return TrackObject()
+    return TrackObject(
+	    title = ChannelName,
+	    thumb = ChannelThumb,
+	    )
 
 
 
@@ -20,14 +23,23 @@ def MetadataObjectForURL(url):
 
 
 def MediaObjectsForURL(url):
-    return [
-        MediaObject(
-	bitrate = '192',
-	audio_codec = AudioCodec.MP3,
-	container = 'mp3',
-	parts = [PartObject(key = Callback(PlayTrack, url = url))]
-)
-	]
+    if url.split("/")[-1].split(".")[-1] == 'm4a':
+        return [
+                MediaObject(
+                    bitrate = '128',
+                    audio_codec = AudioCodec.AAC,
+                    parts = [PartObject(key = Callback(PlayTrack, url = url))]
+                    )
+                ]
+    else:
+        return [
+                MediaObject(
+                    bitrate = '128',
+                    audio_codec = AudioCodec.MP3,
+                    container = 'mp3',
+                    parts = [PartObject(key = Callback(PlayTrack, url = url, ext = '.mp3'))]
+                    )
+                ]
 
 def PlayTrack(url):
     return Redirect(url)
