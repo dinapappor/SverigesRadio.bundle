@@ -15,45 +15,25 @@ def MainMenu():
 
     menu.add(
             DirectoryObject(
-                key = Callback(GetChannels),
-                title='Kanaler')
+                key = Callback(GetLiveChannels),
+                title='Lyssna live!')
                 )
     return menu
 
 
-def GetChannels():
+def GetLiveChannels():
 
     ChannelMenu = ObjectContainer(title1='Sveriges Radio', title2='Kanaler')
 
-    SRData = XML.ElementFromURL('http://api.sr.se/api/v2/channels?pagination=false')
-
-    Channels = SRData.find('channels')
-
-    for Channel in Channels:
-        ChannelName = Channel.get('name')
-	for data in Channel:
-	    if data.tag == 'image':
-		ChannelImage= data.text
-	    elif data.tag == 'tagline':
-		ChannelSummary = data.text
-	    elif data.tag == 'liveaudio':
-		for subdata in data.getchildren():
-		    if subdata.tag == 'url':
-			MediaUrl = subdata.text
-		    else:
-			pass
-	    else:
-		pass
-        ChannelMenu.add(
-                TrackObject(
-                    #url = MediaObject(bitrate='128', audio_codec = AudioCodec.MP3, container = 'mp3', parts = [PartObject(key=Redirect(MediaUrl))]),
-                    url = MediaUrl,
-		    title = ChannelName,
-		    summary = ChannelSummary,
-		    thumb = ChannelImage,
-                    )
-
-                )
-
+    SRData = JSON.ObjectFromURL('http://api.sr.se/api/v2/channels?pagination=false&format=json')
+    for channel in SRData['channels']:
+	ChannelMenu.add(
+		TrackObject(
+		    url = channel['liveaudio']['url'],
+		    title = channel['name'],
+		    summary = channel['tagline'],
+		    thumb = channel['image']
+		    )
+		)
 
     return ChannelMenu
