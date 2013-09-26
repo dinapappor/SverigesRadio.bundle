@@ -10,9 +10,11 @@
 		<array>
 		    <string>http://sverigesradio.se/topsy/direkt/(.*)\.mp3</string>
 		    <string>http://sverigesradio.se/topsy/ljudfil/(.*).m4a</string>
+		    <string>http://sverigesradio.se/topsy/ljudfil/(.*).mp3</string>
 		</array>
 		<key>TestURLs</key>
 		<array>
+		    <string>http://sverigesradio.se/topsy/ljudfil/4600995.mp3</string>
 		    <string>http://sverigesradio.se/topsy/ljudfil/4701761.m4a</string>
 		    <string>http://sverigesradio.se/topsy/direkt/132.mp3</string>
 		    <string>http://sverigesradio.se/topsy/direkt/164.mp3</string>
