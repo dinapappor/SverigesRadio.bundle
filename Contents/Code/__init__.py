@@ -34,15 +34,53 @@ def GetLiveChannels():
     SRData = JSON.ObjectFromURL('http://api.sr.se/api/v2/channels?pagination=false&format=json')
     for channel in SRData['channels']:
         ChannelMenu.add(
-                TrackObject(
-                    url = channel['liveaudio']['url'],
-                    title = channel['name'],
-                    summary = channel['tagline'],
-                    thumb = channel['image']
+                CreateTrackObject(
+                    MediaUrl = channel['liveaudio']['url'],
+                    MediaTitle = channel['name'],
+                    MediaDescription = channel['tagline'],
+                    MediaArt = channel['image'],
+		    MediaDuration = 0
                     )
                 )
 
     return ChannelMenu
+
+@route('/music/sverigesradio/track')
+def CreateTrackObject(MediaUrl, MediaTitle, MediaDescription, MediaArt, MediaDuration):
+
+    if MediaUrl.endswith('.m4a'):
+	MediaContainer = Container.MP4
+	MediaCodec = AudioCodec.AAC
+	MediaFormat = 'aac'
+    elif MediaUrl.endswith('mp3'):
+	MediaCodec = AudioCodec.MP3
+	MediaFormat = 'mp3'
+	MediaContainer = 'mp3'
+
+    Track = TrackObject(
+	    key = Callback(CreateTrackObject, MediaUrl = MediaUrl, MediaTitle = MediaTitle, MediaDescription = MediaDescription, MediaArt = MediaArt),
+	    rating_key = MediaUrl,
+	    title = MediaTitle,
+	    summary = MediaDescription,
+	    thumb = MediaArt,
+	    items = [
+		MediaObject(
+		    parts = [
+			PartObject(key=Callback(PlayAudio, MediaUrl=MediaUrl, ext=MediaFormat))
+			],
+		    container = MediaContainer,
+		    audio_codec = MediaCodec,
+		    audio_channels = 2,
+		    duration = MediaDuration
+		    )
+		]
+	    )
+    return Track
+
+def PlayAudio(MediaUrl):
+
+    return Redirect(MediaUrl)
+
 
 def GetAllCategories():
 
@@ -94,22 +132,23 @@ def ListEpisodes(ProgramName, ProgramId, Page = 1, TotalPages = 1):
 	if 'broadcast' in Episode:
 	    Log(Episode['broadcast']['broadcastfiles'][0]['duration'])
 	    EpisodeMenu.add(
-		    TrackObject(
-			url = Episode['broadcast']['broadcastfiles'][0]['url'],
-			title = Episode['title'],
-			summary = Episode['description'],
-			thumb = Episode['imageurl'],
-			duration = Episode['broadcast']['broadcastfiles'][0]['duration'] * 1000
+		    CreateTrackObject(
+			MediaUrl = Episode['broadcast']['broadcastfiles'][0]['url'],
+			MediaTitle = Episode['title'],
+			MediaDescription = Episode['description'],
+			MediaArt = Episode['imageurl'],
+			MediaDuration = Episode['broadcast']['broadcastfiles'][0]['duration'] * 1000
 			)
 		)
 	elif 'listenpodfile':
 	    Log(Episode['listenpodfile']['duration'])
 	    EpisodeMenu.add(
-		    TrackObject(
-			url = Episode['listenpodfile']['url'],
-			title = Episode['title'],
-			summary = Episode['description'],
-			duration = Episode['listenpodfile']['duration'] * 1000
+		    CreateTrackObject(
+			MediaUrl = Episode['listenpodfile']['url'],
+			MediaTitle = Episode['title'],
+			MediaDescription = Episode['description'],
+			MediaArt = '',
+			MediaDuration = Episode['listenpodfile']['duration'] * 1000
 			)
 		    )
 	else:
