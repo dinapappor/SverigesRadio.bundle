@@ -1,7 +1,7 @@
 TEXT_TITLE = 'Sveriges Radio'
 ART = 'SR.jpg'
 PLUGIN_PREFIX = '/music/SverigesRadio'
-
+PLSReg = Regex('File1=(https?://.+)')
 def Start():
     ObjectContainer.art = R(ART)
     DirectoryObject.thumb = R(ART)
@@ -24,15 +24,31 @@ def MainMenu():
                 key = Callback(GetAllCategories),
                 title = 'Program efter kategori')
             )
+    menu.add(
+	    PrefsObject(
+		title=u"Inställningar..."
+		)
+	    )
     return menu
 
 
 def GetLiveChannels():
 
     ChannelMenu = ObjectContainer(title1='Sveriges Radio', title2='Kanaler')
+    AudioQuality = Prefs['AudioQuality']
 
-    SRData = JSON.ObjectFromURL('http://api.sr.se/api/v2/channels?pagination=false&format=json')
+    Log(Client.Protocols)
+
+    if AudioQuality == 'High':
+	AudioQualityString = '&audioquality=hi'
+    elif AudioQuality == 'Low':
+	AudioQualityString = '&audioquality=lo'
+    else:
+	AudioQualityString = ''
+
+    SRData = JSON.ObjectFromURL('http://api.sr.se/api/v2/channels?liveaudiotemplateid=3&pagination=false&format=json'+AudioQualityString)
     for channel in SRData['channels']:
+	Log(channel['liveaudio']['url'])
         ChannelMenu.add(
                 CreateTrackObject(
                     MediaUrl = channel['liveaudio']['url'],
@@ -56,6 +72,10 @@ def CreateTrackObject(MediaUrl, MediaTitle, MediaDescription, MediaArt, MediaDur
 	MediaCodec = AudioCodec.MP3
 	MediaFormat = 'mp3'
 	MediaContainer = 'mp3'
+    elif ".pls" in MediaUrl:
+	MediaContainer = Container.MP4
+	MediaCodec = AudioCodec.AAC
+	MediaFormat = 'aac'
 
     Track = TrackObject(
 	    key = Callback(CreateTrackObject, MediaUrl = MediaUrl, MediaTitle = MediaTitle, MediaDescription = MediaDescription, MediaArt = MediaArt),
@@ -79,7 +99,17 @@ def CreateTrackObject(MediaUrl, MediaTitle, MediaDescription, MediaArt, MediaDur
 
 def PlayAudio(MediaUrl):
 
-    return Redirect(MediaUrl)
+    if MediaUrl.endswith(".pls"):
+	MediaContent = content = HTTP.Request(MediaUrl, cacheTime=0).content
+	RealUrl = PLSReg.search(MediaContent)
+
+	if RealUrl:
+	    Log("Found real url: "+RealUrl.group(1))
+	    return Redirect(RealUrl.group(1))
+	else:
+	    raise Ex.MediaNotAvailable
+    else:
+	return Redirect(MediaUrl)
 
 
 def GetAllCategories():
@@ -130,7 +160,6 @@ def ListEpisodes(ProgramName, ProgramId, Page = 1, TotalPages = 1):
 
     for Episode in SRData['episodes']:
 	if 'broadcast' in Episode:
-	    Log(Episode['broadcast']['broadcastfiles'][0]['duration'])
 	    EpisodeMenu.add(
 		    CreateTrackObject(
 			MediaUrl = Episode['broadcast']['broadcastfiles'][0]['url'],
@@ -141,7 +170,6 @@ def ListEpisodes(ProgramName, ProgramId, Page = 1, TotalPages = 1):
 			)
 		)
 	elif 'listenpodfile':
-	    Log(Episode['listenpodfile']['duration'])
 	    EpisodeMenu.add(
 		    CreateTrackObject(
 			MediaUrl = Episode['listenpodfile']['url'],

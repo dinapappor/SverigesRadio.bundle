@@ -1,6 +1,6 @@
 [
     {
-	"id":    "pref1",
+	"id":    "AudioQuality",
 	"label": "Live stream quality",
 	"type":  "enum",
 	"values": [
@@ -8,6 +8,6 @@
 		"Medium",
 		"High",
 	],
-	"default": "Medium",
+	"default": "High",
     },
 ]
