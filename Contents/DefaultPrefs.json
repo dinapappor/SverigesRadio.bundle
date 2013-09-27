@@ -1,0 +1,13 @@
+[
+    {
+	"id":    "pref1",
+	"label": "Live stream quality",
+	"type":  "enum",
+	"values": [
+	        "Low",
+		"Medium",
+		"High",
+	],
+	"default": "Medium",
+    },
+]
